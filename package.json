@@ -1,0 +1,24 @@
+{
+  "name": "otfer",
+  "version": "0.0.1",
+  "description": "A font subsetting tool based on opentype.js",
+  "main": "index.js",
+  "scripts": {
+    "test": "jest"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/laoshu133/otfer.git"
+  },
+  "keywords": [
+    "otf",
+    "ttf",
+    "subset"
+  ],
+  "author": "xiaomi",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/laoshu133/otfer/issues"
+  },
+  "homepage": "https://github.com/laoshu133/otfer#readme"
+}
