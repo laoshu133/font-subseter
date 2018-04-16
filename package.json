@@ -4,6 +4,7 @@
   "description": "A font subsetting tool based on opentype.js",
   "main": "index.js",
   "scripts": {
+    "dev": "node builds/dev.js",
     "test": "jest"
   },
   "repository": {
@@ -20,5 +21,15 @@
   "bugs": {
     "url": "https://github.com/laoshu133/otfer/issues"
   },
-  "homepage": "https://github.com/laoshu133/otfer#readme"
+  "homepage": "https://github.com/laoshu133/otfer#readme",
+  "devDependencies": {
+    "babel-plugin-transform-runtime": "^6.23.0",
+    "babel-runtime": "^6.26.0",
+    "express": "^4.16.3",
+    "less": "^3.0.1",
+    "parcel-bundler": "^1.7.1"
+  },
+  "dependencies": {
+    "opentype.js": "^0.8.0"
+  }
 }

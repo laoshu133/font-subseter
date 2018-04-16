@@ -1,0 +1,163 @@
+*{
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+html,
+body{
+    height: 100%;
+}
+body{
+    font: 14px/1.5 -apple-system-font,Helvetica Neue,Helvetica,STHeiTi,"Microsoft YaHei",sans-serif;
+}
+
+.demo-text{
+    border: 1px solid #DDD;
+    position: absolute;
+    right: 0;
+    top: 0;
+
+    &:before{
+        display: block;
+        content: 'Demo Text:';
+        padding: 5px;
+    }
+
+    textarea{
+        display: block;
+        border: 0 solid #DDD;
+        border-top-width: 1px;
+        font-size: 1.2em;
+        padding: 10px;
+        height: 3em;
+        width: 300px;
+        resize: vertical;
+    }
+}
+
+.font-list{
+    border-right: 1px solid #DDD;
+    height: 100%;
+    width: 300px;
+    position: absolute;
+    left: 0;
+    top: 0;
+    overflow: hidden;
+    overflow-y: auto;
+
+    li{
+        display: block;
+        cursor: pointer;
+        border-top: 1px dotted #DDD;
+        padding: 20px 10px;
+    }
+    li:first-child{
+        border-top: 0;
+    }
+    li:hover{
+        background-color: #DDD;
+    }
+    li.current{
+        background-color: #AAA;
+    }
+}
+
+.font-preivew{
+    line-height: 1.5;
+    width: 100%;
+    position: absolute;
+    left: 350px;
+    top: 50px;
+    z-index: 1;
+
+    .font-pending{
+        background: rgba(255, 255, 255, .88);
+        box-shadow: 0 1px 20px rgba(0, 0, 0, .2);
+        font-size: 1.5em;
+        position: absolute;
+        padding: 40px;
+        width: 50%;
+        z-index: 9;
+    }
+}
+
+.font-item{
+    border: 1px solid rgba(88, 88, 88, .5);
+    color: #EA0717;
+    font-size: 50px;
+    white-space: nowrap;
+    position: absolute;
+    left: 0;
+    top: 0;
+
+    &::before{
+        content: 'Origin';
+        background: rgba(0, 0, 0, .5);
+        color: #FFF;
+        font-size: 12px;
+        font-family: Arial;
+        padding: 1px 6px;
+        position: absolute;
+        left: 50%;
+        top: -25px;
+        transform: translate(-50%, 0);
+    }
+
+    &.is-subset::before{
+        content: 'Subset';
+    }
+
+    &.vertical-rl{
+        &.is-subset{
+            margin-left: 1.6em;
+        }
+
+        span{
+            writing-mode: vertical-rl;
+        }
+    }
+
+    &.horizontal-tb{
+        left: 300px;
+
+        &.is-subset{
+            margin-top: 1.64em;
+        }
+
+        &::before{
+            padding: 6px 1px;
+            top: 50%;
+            left: -25px;
+            transform: translate(0, -50%);
+            writing-mode: vertical-rl;
+        }
+
+        span{
+            writing-mode: horizontal-tb;
+        }
+    }
+
+    // &.vertical-rl{
+    //     writing-mode: vertical-rl;
+    //     top: 12px;
+
+    //     &.is-subset{
+    //         margin-left: 1.5em;
+    //     }
+    // }
+
+    // &.horizontal-tb{
+    //     writing-mode: horizontal-tb;
+    //     left: 300px;
+
+    //     &.is-subset{
+    //         margin-top: 1.5em;
+    //     }
+
+    //     &::before{
+    //         padding: 6px 1px;
+    //         writing-mode: vertical-rl;
+    //     }
+    // }
+}
