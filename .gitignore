@@ -9,4 +9,5 @@ dist*
 
 # app
 fonts/*
+.fonts.json
 !fonts/.gitkeep
