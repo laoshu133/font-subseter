@@ -8,13 +8,19 @@
 </head>
 <body>
     <div id="app">
-        <div class="demo-text"><textarea v-model="demoText"></textarea></div>
+        <div class="demo-text">
+            <textarea v-model="demoText"></textarea>
+        </div>
         <div class="font-list">
             <ul>
                 <li v-if="!fontList.length">Loading...</li>
-                <li v-for="item in fontList" :class="{
-                    current: currentFont === item
-                }">{{item.alias}} ({{item.family}})</li>
+                <li
+                    v-for="item in fontList"
+                    :class="{
+                        current: currentFont === item
+                    }"
+                    @click="previewFont(item)"
+                >{{item.alias}} ({{item.family}})</li>
             </ul>
         </div>
         <div class="font-preivew" v-if="currentFont">

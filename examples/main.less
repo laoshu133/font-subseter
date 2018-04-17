@@ -13,10 +13,12 @@ body{
 }
 
 .demo-text{
+    background: rgba(255, 255, 255, .8);
     border: 1px solid #DDD;
     position: absolute;
     right: 0;
     top: 0;
+    z-index: 9;
 
     &:before{
         display: block;
@@ -26,6 +28,7 @@ body{
 
     textarea{
         display: block;
+        background: none;
         border: 0 solid #DDD;
         border-top-width: 1px;
         font-size: 1.2em;
@@ -49,11 +52,8 @@ body{
     li{
         display: block;
         cursor: pointer;
-        border-top: 1px dotted #DDD;
+        border-bottom: 1px dotted #DDD;
         padding: 20px 10px;
-    }
-    li:first-child{
-        border-top: 0;
     }
     li:hover{
         background-color: #DDD;
@@ -72,12 +72,12 @@ body{
     z-index: 1;
 
     .font-pending{
-        background: rgba(255, 255, 255, .88);
+        background: rgba(255, 255, 255, .92);
         box-shadow: 0 1px 20px rgba(0, 0, 0, .2);
-        font-size: 1.5em;
+        // font-size: 1.5em;
+        margin: -40px 0 0 -40px;
         position: absolute;
-        padding: 40px;
-        width: 50%;
+        padding: 15px 80px 15px 20px;
         z-index: 9;
     }
 }

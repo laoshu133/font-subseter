@@ -12,7 +12,7 @@ const app = new window.Vue({
             fontList: [],
             pending: false,
             currentFont: null,
-            demoText: 'ABCDX',
+            demoText: '',
 
             previewPresets: [
                 { writingMode: 'vertical-rl', subset: false },
@@ -44,13 +44,30 @@ const app = new window.Vue({
         },
 
         async previewFont(font) {
-            this.pending = true;
+            if(
+                font === this.currentFont &&
+                this.demoText === this._lastDemoText
+            ) {
+                return;
+            }
+
+            const lastFont = this.currentFont;
+            if(!this.demoText || this.demoText === lastFont.alias) {
+                this._lastDemoText = font.alias;
+                this.demoText = font.alias;
+            }
+
             this.currentFont = font;
-            this.demoText = font.alias || font.name;
+            this.pending = true;
 
             await Promise.all([
-                this.registerFont(font, true),
-                this.subsetFont(font)
+                this.registerFont(font),
+                new Promise(resolve => {
+                    // Delay for UI
+                    setTimeout(() => {
+                        resolve(this.subsetFont(font));
+                    }, 500);
+                })
             ]);
 
             this.pending = false;
@@ -68,54 +85,90 @@ const app = new window.Vue({
             const newFont = otfer.subset(this.demoText);
             const buffer = newFont.toArrayBuffer();
             const blob = new Blob([buffer]);
-            const url = URL.createObjectURL(blob);
+            const fontData = Object.assign({}, font, {
+                url: URL.createObjectURL(blob)
+            });
 
-            await this.registerFont({
-                alias: `${font.alias} Subset`,
-                family: `${font.family} Subset`,
-                name: `${font.name}-Subset`,
-                url
+            await this.registerFont(fontData, {
+                useLocal: false,
+                subset: true
             });
 
             // Clean
             setTimeout(() => {
-                URL.revokeObjectURL(url);
+                URL.revokeObjectURL(fontData.url);
             }, 4000);
 
             return newFont;
         },
 
-        async registerFont(options, withLocal = true) {
-            const family = options.family || options.name;
+        async registerFont(data, {
+            useLocal = true,
+            subset = false
+        } = {}) {
+            if(subset) {
+                data = Object.assign({}, data, {
+                    family: `${data.family} Subset`,
+                    alias: `${data.alias} Subset`,
+                    name: `${data.name}-Subset`
+                });
+            }
+
+            if(!this.registersFontsMap) {
+                this.registersFontsMap = {};
+            }
+
+            const family = data.family || data.name;
+            const map = this.registersFontsMap;
+
+            if(!subset && map[family]) {
+                return map[family];
+            }
+
             const urls = [];
 
-            if(withLocal) {
+            if(useLocal) {
                 urls.push(`local("${family}")`);
             }
-            if(withLocal && options.name !== family) {
-                urls.push(`local("${options.name}")`);
+            if(useLocal && data.name !== family) {
+                urls.push(`local("${data.name}")`);
             }
 
-            if(options.woff || options.url) {
-                urls.push(`url("${options.woff || options.url}")`);
+            if(data.woff || data.url) {
+                urls.push(`url("${data.woff || data.url}")`);
             }
-            if(options.ttf) {
-                urls.push(`url("${options.ttf}")`);
+            if(data.ttf) {
+                urls.push(`url("${data.ttf}")`);
             }
 
             console.log(`Register font: [${family}]`, urls.join(','), {
-                weight: options.weight || 'normal',
-                style: options.style || 'normal'
-            }, options);
+                weight: data.weight || 'normal',
+                style: data.style || 'normal'
+            }, data);
 
             const font = new FontFace(family, urls.join(','), {
-                weight: options.weight || 'normal',
-                style: options.style || 'normal'
+                weight: data.weight || 'normal',
+                style: data.style || 'normal'
             });
 
             document.fonts.add(font);
 
+            map[family] = font;
+
             return await font.load();
+        },
+
+        updateFontPreviewLazy() {
+            clearTimeout(this.updateFontPreviewTimer);
+
+            this.updateFontPreviewTimer = setTimeout(() => {
+                this.previewFont(this.currentFont);
+            }, 520);
+        }
+    },
+    watch: {
+        demoText() {
+            this.updateFontPreviewLazy();
         }
     },
     async created() {
