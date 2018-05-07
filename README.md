@@ -1,4 +1,4 @@
-# Otfer
+# font-subseter
 
 A font subsetting tool based on opentype.js.
 
