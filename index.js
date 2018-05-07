@@ -1,1 +1,1 @@
-module.exports = require('./lib/otfer');
+module.exports = require('./lib/font-subseter');
