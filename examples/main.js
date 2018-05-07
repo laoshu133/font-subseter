@@ -3,7 +3,9 @@
  */
 
 import './main.less';
-import Otfer from '../index';
+import FontSubseter from '../index';
+
+const subseter = new FontSubseter();
 
 const app = new window.Vue({
     el: '#app',
@@ -13,6 +15,7 @@ const app = new window.Vue({
             pending: false,
             currentFont: null,
             demoText: '',
+            engine: /[?&]engine=([^&]+)/.test(location.search) ? RegExp.$1 : 'opentype',
 
             previewPresets: [
                 { writingMode: 'vertical-rl', subset: false },
@@ -23,29 +26,41 @@ const app = new window.Vue({
         };
     },
     methods: {
+        fillFontInfo(font) {
+            const names = font.names;
+            const getName = (k, lang = 'zh') => {
+                const data = names[k] || {};
+
+                return data[lang] || data['en'] || data;
+            };
+
+            const family = getName('fontFamily', 'en');
+
+            return {
+                family,
+                subfamily: getName('subfamily'),
+                alias: getName('fontFamily') || family,
+                name: getName('postScriptName') || family,
+                names: font.names,
+                url: font.url
+            };
+        },
+
         async loadFonts() {
             const res = await fetch('/fonts');
             const fontList = await res.json();
 
             this.fontList = fontList.map(font => {
-                const names = font.names;
-
-                return {
-                    alias: names.fullName.zh || names.fullName.en,
-                    family: names.fontFamily.en,
-                    subfamily: names.fontSubfamily.en,
-                    name: names.postScriptName.en,
-                    names: font.names,
-                    url: font.url
-                };
+                return this.fillFontInfo(font);
             });
 
             return this.fontList;
         },
 
-        async previewFont(font) {
+        async previewFont(font = this.currentFont) {
             if(
                 font === this.currentFont &&
+                this.engine === this._lastengine &&
                 this.demoText === this._lastDemoText
             ) {
                 return;
@@ -53,10 +68,11 @@ const app = new window.Vue({
 
             const lastFont = this.currentFont;
             if(!this.demoText || this.demoText === lastFont.alias) {
-                this._lastDemoText = font.alias;
                 this.demoText = font.alias;
             }
 
+            this._lastDemoText = this.demoText;
+            this._lastengine = this.engine;
             this.currentFont = font;
             this.pending = true;
 
@@ -68,38 +84,55 @@ const app = new window.Vue({
                         resolve(this.subsetFont(font));
                     }, 500);
                 })
+                .then(subsetFont => {
+                    font.subset = subsetFont;
+
+                    return subsetFont;
+                })
             ]);
 
             this.pending = false;
         },
 
-        async subsetFont(font) {
-            if(!font.otfer) {
-                const res = await fetch(font.url);
-                const buffer = await res.arrayBuffer();
-
-                font.otfer = new Otfer(buffer);
-            }
-
-            const otfer = font.otfer;
-            const newFont = otfer.subset(this.demoText);
-            const buffer = newFont.toArrayBuffer();
-            const blob = new Blob([buffer]);
+        async subsetFont(font = this.currentFont) {
             const fontData = Object.assign({}, font, {
-                url: URL.createObjectURL(blob)
+                // url: '//localhost/d/xx.woff2',
+                url: null
             });
+
+            if(!fontData.url) {
+                if(!font.file && font.url) {
+                    const res = await fetch(font.url);
+
+                    font.file = await res.blob();
+                }
+
+                const formData = new FormData();
+
+                formData.append('file', font.file);
+                formData.append('engine', this.engine);
+                formData.append('text', this.demoText);
+
+                const res = await fetch('/subseter', {
+                    method: 'post',
+                    body: formData
+                });
+                const blob = await res.blob();
+
+                fontData.url = URL.createObjectURL(blob);
+
+                // Clean
+                setTimeout(() => {
+                    URL.revokeObjectURL(fontData.url);
+                }, 30000);
+            }
 
             await this.registerFont(fontData, {
                 useLocal: false,
                 subset: true
             });
 
-            // Clean
-            setTimeout(() => {
-                URL.revokeObjectURL(fontData.url);
-            }, 4000);
-
-            return newFont;
+            return fontData;
         },
 
         async registerFont(data, {
@@ -164,9 +197,39 @@ const app = new window.Vue({
             this.updateFontPreviewTimer = setTimeout(() => {
                 this.previewFont(this.currentFont);
             }, 520);
+        },
+
+        downloadFont() {
+            const font = this.currentFont && this.currentFont.subset;
+            if(!font || !font.url) {
+                return;
+            }
+
+            const link = document.createElement('a');
+
+            link.download = font.name + '.subset.otf';
+            link.href = font.url;
+
+            link.click();
+        },
+
+        async onFileChange(e) {
+            const file = e.target.files[0];
+            const fontInfo = await subseter.loadInfoByBlob(file);
+            const font = this.fillFontInfo({
+                url: URL.createObjectURL(file),
+                names: fontInfo.names,
+                file
+            });
+
+            this.fontList.unshift(font);
+            this.previewFont(font);
         }
     },
     watch: {
+        engine() {
+            this.updateFontPreviewLazy();
+        },
         demoText() {
             this.updateFontPreviewLazy();
         }

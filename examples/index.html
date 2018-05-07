@@ -4,12 +4,29 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title>Otfer demo</title>
+    <title>font-subseter demo</title>
 </head>
 <body>
     <div id="app">
         <div class="demo-text">
             <textarea v-model="demoText"></textarea>
+            <div class="btns">
+                <button @click="downloadFont()">Download subset font</button>
+            </div>
+        </div>
+        <div class="demo-options">
+            <div class="file-picker">
+                <input ref="fileInp" type="file" accept=".ttf,.otf" @change="onFileChange">
+                <button @click="$refs.fileInp.click()">Pick font file(.ttf,  .otf)</button>
+            </div>
+            <div class="engine-picker">
+                <select v-model="engine">
+                    <option value="opentype">Opentype.js</option>
+                    <!-- <option value="fontmin">Fontmin</option> -->
+                    <option value="fonttools">Fonttools</option>
+                    <!-- <option value="fontkit">Fontkit</option> -->
+                </select>
+            </div>
         </div>
         <div class="font-list">
             <ul>
