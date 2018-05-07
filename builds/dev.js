@@ -1,8 +1,11 @@
 const opentype = require('opentype.js');
 const Bundler = require('parcel-bundler');
+const uploader = require('multer')();
 const app = require('express')();
 const path = require('path');
 const fs = require('fs');
+
+const FontSubseter = require('../index');
 
 const port = 1234;
 const bundler = new Bundler('./examples/index.html', {
@@ -46,6 +49,28 @@ app.get(`/${fontDir}/*`, (req, res) => {
 
     res.sendFile(filePath, {
         maxAge: 10 * 60 * 1000
+    });
+});
+
+app.post('/subseter', uploader.single('file'), (req, res) => {
+    const engine = req.body.engine || 'opentype';
+    const text = req.body.text || 'ABCDX';
+    const subseter = new FontSubseter({
+        engine: require('../lib/engines/' + engine.replace(/[^\w-]/g, ''))
+    });
+
+    subseter.subset(req.file.buffer, text)
+    .then(buf => {
+        const defaultMime = 'application/octet-stream';
+
+        res.setHeader('Content-Type', buf.type || defaultMime);
+
+        res.send(buf);
+    })
+    .catch(err => {
+        console.error(err);
+
+        res.status(err.status || 500).send(err);
     });
 });
 
