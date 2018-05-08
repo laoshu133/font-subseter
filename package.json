@@ -29,6 +29,7 @@
   "homepage": "https://github.com/laoshu133/font-subseter#readme",
   "dependencies": {
     "pako": "^1.0.6",
+    "sfnt2woff": "^1.0.1",
     "ttf2woff": "^2.0.1"
   },
   "devDependencies": {
