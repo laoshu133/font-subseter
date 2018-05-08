@@ -55,14 +55,18 @@ app.get(`/${fontDir}/*`, (req, res) => {
 app.post('/subseter', uploader.single('file'), (req, res) => {
     const engine = req.body.engine || 'opentype';
     const text = req.body.text || 'ABCDX';
+    const type = req.body.type || 'ttf';
     const subseter = new FontSubseter({
         engine: require('../lib/engines/' + engine.replace(/[^\w-]/g, ''))
     });
 
     subseter.subset(req.file.buffer, text)
     .then(buf => {
-        const defaultMime = 'application/octet-stream';
+        if(type === 'woff') {
+            buf = subseter.covertToWoff(buf);
+        }
 
+        const defaultMime = 'application/octet-stream';
         res.setHeader('Content-Type', buf.type || defaultMime);
 
         res.send(buf);

@@ -16,6 +16,7 @@ const app = new window.Vue({
             currentFont: null,
             demoText: '',
             engine: /[?&]engine=([^&]+)/.test(location.search) ? RegExp.$1 : 'opentype',
+            fontType: /[?&]type=([^&]+)/.test(location.search) ? RegExp.$1 : 'ttf',
 
             previewPresets: [
                 { writingMode: 'vertical-rl', subset: false },
@@ -29,9 +30,9 @@ const app = new window.Vue({
         fillFontInfo(font) {
             const names = font.names;
             const getName = (k, lang = 'zh') => {
-                const data = names[k] || {};
+                const data = names[k] || { en: '' };
 
-                return data[lang] || data['en'] || data;
+                return data[lang] || data['en'] || '';
             };
 
             const family = getName('fontFamily', 'en');
@@ -111,13 +112,28 @@ const app = new window.Vue({
 
                 formData.append('file', font.file);
                 formData.append('engine', this.engine);
+                formData.append('type', this.fontType);
                 formData.append('text', this.demoText);
 
                 const res = await fetch('/subseter', {
                     method: 'post',
                     body: formData
                 });
-                const blob = await res.blob();
+
+                fontData.type = res.headers.get('content-type');
+
+                let blob = null;
+                if(fontData.type === 'font/woff') {
+                    blob = await res.blob();
+                }
+                else {
+                    const buf = await res.arrayBuffer();
+                    const newBuf = subseter.covertToWoff(buf);
+
+                    blob = new Blob([newBuf], {
+                        type: 'font/woff'
+                    });
+                }
 
                 fontData.url = URL.createObjectURL(blob);
 
@@ -206,8 +222,15 @@ const app = new window.Vue({
             }
 
             const link = document.createElement('a');
+            const extsMap = {
+                'font/truetype': '.ttf',
+                'font/opentype': '.otf',
+                'font/woff2': '.woff2',
+                'font/woff': '.woff'
+            };
+            const ext = extsMap[font.type] || extsMap['font/truetype'];
 
-            link.download = font.name + '.subset.otf';
+            link.download = `${font.name}.subset${ext}`;
             link.href = font.url;
 
             link.click();
