@@ -1,12 +1,17 @@
 {
   "name": "font-subseter",
-  "version": "0.0.1",
+  "version": "1.0.0",
   "description": "A font subsetting tool based on opentype.js",
   "main": "index.js",
   "scripts": {
     "dev": "nodemon -w builds -w lib builds/dev.js",
     "test": "jest"
   },
+  "files": [
+    "README.md",
+    "index.*",
+    "lib"
+  ],
   "repository": {
     "type": "git",
     "url": "git+ssh://git@github.com/laoshu133/font-subseter.git"
