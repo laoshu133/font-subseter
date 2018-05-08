@@ -22,6 +22,10 @@
     "url": "https://github.com/laoshu133/font-subseter/issues"
   },
   "homepage": "https://github.com/laoshu133/font-subseter#readme",
+  "dependencies": {
+    "pako": "^1.0.6",
+    "ttf2woff": "^2.0.1"
+  },
   "devDependencies": {
     "babel-plugin-transform-runtime": "^6.23.0",
     "babel-runtime": "^6.26.0",
@@ -37,6 +41,5 @@
     "opentype.js": "^0.8.0",
     "parcel-bundler": "^1.7.1",
     "tempfile": "^2.0.0"
-  },
-  "dependencies": {}
+  }
 }
