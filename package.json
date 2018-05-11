@@ -1,6 +1,6 @@
 {
   "name": "font-subseter",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "A font subsetting tool based on opentype.js",
   "main": "index.js",
   "scripts": {
@@ -28,6 +28,7 @@
   },
   "homepage": "https://github.com/laoshu133/font-subseter#readme",
   "dependencies": {
+    "opentype.js": "^0.8.0",
     "pako": "^1.0.6",
     "sfnt2woff": "^1.0.1",
     "ttf2woff": "^2.0.1"
@@ -44,7 +45,6 @@
     "less": "^3.0.1",
     "multer": "^1.3.0",
     "nodemon": "^1.17.4",
-    "opentype.js": "^0.8.0",
     "parcel-bundler": "^1.7.1",
     "tempfile": "^2.0.0"
   }
