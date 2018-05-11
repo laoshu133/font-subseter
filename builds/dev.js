@@ -52,7 +52,7 @@ app.get(`/${fontDir}/*`, (req, res) => {
     });
 });
 
-app.post('/subseter', uploader.single('file'), (req, res) => {
+app.post('/subset', uploader.single('file'), (req, res) => {
     const engine = req.body.engine || 'opentype';
     const text = req.body.text || 'ABCDX';
     const type = req.body.type || 'ttf';

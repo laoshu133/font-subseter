@@ -115,7 +115,7 @@ const app = new window.Vue({
                 formData.append('type', this.fontType);
                 formData.append('text', this.demoText);
 
-                const res = await fetch('/subseter', {
+                const res = await fetch('/subset', {
                     method: 'post',
                     body: formData
                 });
