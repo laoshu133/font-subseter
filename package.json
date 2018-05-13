@@ -30,8 +30,7 @@
   "dependencies": {
     "opentype.js": "^0.8.0",
     "pako": "^1.0.6",
-    "sfnt2woff": "^1.0.1",
-    "ttf2woff": "^2.0.1"
+    "sfnt2woff": "^1.0.1"
   },
   "devDependencies": {
     "babel-plugin-transform-runtime": "^6.23.0",
