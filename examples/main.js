@@ -145,7 +145,7 @@ const app = new window.Vue({
                 // Clean
                 setTimeout(() => {
                     URL.revokeObjectURL(fontData.url);
-                }, 30000);
+                }, 60000);
             }
 
             await this.registerFont(fontData, {
