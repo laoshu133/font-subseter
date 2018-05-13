@@ -6,6 +6,11 @@ import './main.less';
 import FontSubseter from '../index';
 
 const subseter = new FontSubseter();
+const getQuery = (name, defaultValue = '') => {
+    const re = new RegExp(`[?&]${name}=([^&]+)`);
+
+    return re.test(location.search) ? RegExp.$1 : defaultValue;
+};
 
 const app = new window.Vue({
     el: '#app',
@@ -15,8 +20,8 @@ const app = new window.Vue({
             pending: false,
             currentFont: null,
             demoText: '',
-            engine: /[?&]engine=([^&]+)/.test(location.search) ? RegExp.$1 : 'opentype',
-            fontType: /[?&]type=([^&]+)/.test(location.search) ? RegExp.$1 : 'ttf',
+            engine: getQuery('engine', 'opentype.js'),
+            fontType: getQuery('type', 'ttf'),
 
             previewPresets: [
                 { writingMode: 'vertical-rl', subset: false },
