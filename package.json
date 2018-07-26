@@ -28,7 +28,7 @@
   },
   "homepage": "https://github.com/laoshu133/font-subseter#readme",
   "dependencies": {
-    "opentype.js": "^0.8.0",
+    "opentype.js": "^0.9.0",
     "pako": "^1.0.6",
     "sfnt2woff": "^1.0.1"
   },
@@ -41,10 +41,10 @@
     "fontmin": "^0.9.6",
     "fonttools": "file:../node-fonttools",
     "fs-extra": "^5.0.0",
-    "less": "^3.0.1",
-    "multer": "^1.3.0",
-    "nodemon": "^1.17.4",
-    "parcel-bundler": "^1.7.1",
+    "less": "^3.8.0",
+    "multer": "^1.3.1",
+    "nodemon": "^1.18.3",
+    "parcel-bundler": "^1.9.7",
     "tempfile": "^2.0.0"
   }
 }
