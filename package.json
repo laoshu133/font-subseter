@@ -29,22 +29,24 @@
   "homepage": "https://github.com/laoshu133/font-subseter#readme",
   "dependencies": {
     "opentype.js": "^0.9.0",
-    "pako": "^1.0.6",
+    "pako": "^1.0.10",
     "sfnt2woff": "^1.0.1"
   },
   "devDependencies": {
+    "babel-core": "^6.26.3",
     "babel-plugin-transform-runtime": "^6.23.0",
+    "babel-preset-env": "^1.7.0",
     "babel-runtime": "^6.26.0",
     "execa": "^0.10.0",
-    "express": "^4.16.3",
-    "fontkit": "^1.7.7",
-    "fontmin": "^0.9.6",
+    "express": "^4.17.1",
+    "fontkit": "^1.8.0",
+    "fontmin": "^0.9.8",
     "fonttools": "file:../node-fonttools",
     "fs-extra": "^5.0.0",
-    "less": "^3.8.0",
-    "multer": "^1.3.1",
-    "nodemon": "^1.18.3",
-    "parcel-bundler": "^1.9.7",
+    "less": "^3.10.3",
+    "multer": "^1.4.2",
+    "nodemon": "^1.19.3",
+    "parcel-bundler": "^1.12.4",
     "tempfile": "^2.0.0"
   }
 }
