@@ -53,18 +53,21 @@ app.get(`/${fontDir}/*`, (req, res) => {
 });
 
 app.post('/subset', uploader.single('file'), (req, res) => {
+    const forceTruetype = req.body.forceTruetype === 'true';
     const type = req.body.type || 'ttf';
     const text = req.body.text || 'ABCDX';
-    let engine = req.body.engine || 'opentype';
 
     // Clear params
+    let engine = req.body.engine || 'opentype';
     engine = engine.replace(/\.js$/i, '').replace(/[^\w-]/g, '');
 
     const subseter = new FontSubseter({
         engine: require('../lib/engines/' + engine)
     });
 
-    subseter.subset(req.file.buffer, text)
+    subseter.subset(req.file.buffer, text, {
+        forceTruetype
+    })
     .then(buf => {
         if(type === 'woff') {
             buf = subseter.covertToWoff(buf);

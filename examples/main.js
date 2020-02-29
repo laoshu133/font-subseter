@@ -6,10 +6,15 @@ import './main.less';
 import FontSubseter from '../index';
 
 const subseter = new FontSubseter();
-const getQuery = (name, defaultValue = '') => {
+const getQuery = (name, defaultValue = '', coverter) => {
     const re = new RegExp(`[?&]${name}=([^&]+)`);
+    let ret = re.test(location.search) ? RegExp.$1 : defaultValue;
 
-    return re.test(location.search) ? RegExp.$1 : defaultValue;
+    if(coverter) {
+        return coverter(ret);
+    }
+
+    return ret;
 };
 
 const app = new window.Vue({
@@ -19,9 +24,13 @@ const app = new window.Vue({
             fontList: [],
             pending: false,
             currentFont: null,
-            demoText: '',
-            engine: getQuery('engine', 'opentype.js'),
-            fontType: getQuery('type', 'ttf'),
+
+            params: {
+                forceTruetype: getQuery('forceTruetype', false),
+                engine: getQuery('engine', 'opentype.js'),
+                fontType: getQuery('type', 'woff'),
+                demoText: getQuery('text', '')
+            },
 
             previewPresets: [
                 { writingMode: 'vertical-rl', subset: false },
@@ -63,24 +72,31 @@ const app = new window.Vue({
             return this.fontList;
         },
 
+        checkParamsChange() {
+            const json = JSON.stringify(this.params);
+
+            if(json !== this._lastParamsJSON) {
+                this._lastParamsJSON = json;
+
+                return true;
+            }
+
+            return false;
+        },
         async previewFont(font = this.currentFont) {
-            if(
-                font === this.currentFont &&
-                this.engine === this._lastengine &&
-                this.demoText === this._lastDemoText
-            ) {
+            const params = this.params;
+            const lastFont = this.currentFont;
+
+            if(!params.demoText || params.demoText === lastFont.alias) {
+                params.demoText = font.alias;
+            }
+
+            if(!this.checkParamsChange()) {
                 return;
             }
 
-            const lastFont = this.currentFont;
-            if(!this.demoText || this.demoText === lastFont.alias) {
-                this.demoText = font.alias;
-            }
-
-            this._lastDemoText = this.demoText;
-            this._lastengine = this.engine;
-            this.currentFont = font;
             this.pending = true;
+            this.currentFont = font;
 
             await Promise.all([
                 this.registerFont(font),
@@ -113,12 +129,14 @@ const app = new window.Vue({
                     font.file = await res.blob();
                 }
 
+                const params = this.params;
                 const formData = new FormData();
 
+                formData.append('engine', params.engine);
+                formData.append('type', params.fontType);
+                formData.append('forceTruetype', params.forceTruetype);
+                formData.append('text', params.demoText);
                 formData.append('file', font.file);
-                formData.append('engine', this.engine);
-                formData.append('type', this.fontType);
-                formData.append('text', this.demoText);
 
                 const res = await fetch('/subset', {
                     method: 'post',
@@ -127,18 +145,19 @@ const app = new window.Vue({
 
                 fontData.type = res.headers.get('content-type');
 
-                let blob = null;
-                if(fontData.type === 'font/woff') {
-                    blob = await res.blob();
-                }
-                else {
-                    const buf = await res.arrayBuffer();
-                    const newBuf = subseter.covertToWoff(buf);
+                const blob = await res.blob();
+                // let blob = null;
+                // if(fontData.type === 'font/woff') {
+                //     blob = await res.blob();
+                // }
+                // else {
+                //     const buf = await res.arrayBuffer();
+                //     const newBuf = subseter.covertToWoff(buf);
 
-                    blob = new Blob([newBuf], {
-                        type: 'font/woff'
-                    });
-                }
+                //     blob = new Blob([newBuf], {
+                //         type: 'font/woff'
+                //     });
+                // }
 
                 fontData.url = URL.createObjectURL(blob);
 
@@ -255,11 +274,11 @@ const app = new window.Vue({
         }
     },
     watch: {
-        engine() {
-            this.updateFontPreviewLazy();
-        },
-        demoText() {
-            this.updateFontPreviewLazy();
+        params: {
+            deep: true,
+            handler() {
+                this.updateFontPreviewLazy();
+            }
         }
     },
     async created() {

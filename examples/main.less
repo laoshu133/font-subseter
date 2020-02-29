@@ -55,14 +55,17 @@ body{
 }
 
 .demo-options{
-    display: flex;
+    box-sizing: border-box;
+    background: #FFF;
     border: 1px solid #DDD;
     border-width: 0 1px 1px 0;
     padding: 10px;
+    height: 120px;
     width: 300px;
+    position: absolute;
+    z-index: 3;
 
     .file-picker{
-        flex: 5;
         height: 30px;
         position: relative;
         overflow: hidden;
@@ -85,15 +88,24 @@ body{
         }
     }
 
-    .engine-picker{
-        flex: 3;
-        padding: 0 10px;
+    .options-picker{
+        padding: 10px 0 0;
 
         select{
             border: 1px solid #CCC;
             border-radius: 0;
             height: 30px;
-            width: 100%;
+            width: 82px;
+        }
+
+        label{
+            display: inline-block;
+            margin-bottom: 8px;
+            margin-right: 10px;
+
+            &:nth-child(2n) {
+                margin-right: 0;
+            }
         }
     }
 }
@@ -104,7 +116,7 @@ body{
     position: absolute;
     bottom: 0;
     left: 0;
-    top: 50px;
+    top: 120px;
     overflow: hidden;
     overflow-y: auto;
 

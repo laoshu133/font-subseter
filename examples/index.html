@@ -9,7 +9,7 @@
 <body>
     <div id="app">
         <div class="demo-text">
-            <textarea v-model="demoText"></textarea>
+            <textarea v-model="params.demoText"></textarea>
             <div class="btns">
                 <button @click="downloadFont()">Download subset font</button>
             </div>
@@ -19,13 +19,27 @@
                 <input ref="fileInp" type="file" accept=".ttf,.otf" @change="onFileChange">
                 <button @click="$refs.fileInp.click()">Pick font file(.ttf,  .otf)</button>
             </div>
-            <div class="engine-picker">
-                <select v-model="engine">
-                    <option value="opentype.js">Opentype.js</option>
-                    <!-- <option value="fontmin">Fontmin</option> -->
-                    <option value="fonttools">Fonttools</option>
-                    <!-- <option value="fontkit">Fontkit</option> -->
-                </select>
+            <div class="options-picker">
+                <label>
+                    Engine:
+                    <select v-model="params.engine">
+                        <option value="opentype.js">Opentype.js</option>
+                        <!-- <option value="fontmin">Fontmin</option> -->
+                        <option value="fonttools">Fonttools</option>
+                        <!-- <option value="fontkit">Fontkit</option> -->
+                    </select>
+                </label>
+                <label>
+                    Target:
+                    <select v-model="params.fontType">
+                        <option value="woff">woff</option>
+                        <option value="ttf">ttf</option>
+                    </select>
+                </label>
+                <label>
+                    Force truetype:
+                    <input type="checkbox" v-model="params.forceTruetype">
+                </label>
             </div>
         </div>
         <div class="font-list">
@@ -52,7 +66,7 @@
             >
                 <span :style="{
                     fontFamily: currentFont.family + (item.subset ? ' Subset' : '')
-                }">{{demoText}}</span>
+                }">{{params.demoText}}</span>
             </div>
         </div>
     </div>
