@@ -1,9 +1,10 @@
 {
   "name": "font-subseter",
-  "version": "1.0.7",
+  "version": "1.2.0",
   "description": "A font subsetting tool based on opentype.js",
   "main": "index.js",
   "scripts": {
+    "build-examples": "rm -rf dist && parcel build --public-url ./ examples/index.html",
     "dev": "nodemon --inspect -w builds -w lib builds/dev.js",
     "test": "jest"
   },
