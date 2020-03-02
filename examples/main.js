@@ -132,8 +132,8 @@ const app = new window.Vue({
                 const params = this.params;
                 const formData = new FormData();
 
+                formData.append('type', 'ttf');
                 formData.append('engine', params.engine);
-                formData.append('type', params.fontType);
                 formData.append('forceTruetype', params.forceTruetype);
                 formData.append('text', params.demoText);
                 formData.append('file', font.file);
@@ -143,23 +143,25 @@ const app = new window.Vue({
                     body: formData
                 });
 
-                fontData.type = res.headers.get('content-type');
+                let blob;
 
-                const blob = await res.blob();
-                // let blob = null;
-                // if(fontData.type === 'font/woff') {
-                //     blob = await res.blob();
-                // }
-                // else {
-                //     const buf = await res.arrayBuffer();
-                //     const newBuf = subseter.covertToWoff(buf);
+                // Debug local toWoff
+                if(params.fontType !== 'ttf') {
+                    const tmpBuf = await res.arrayBuffer();
+                    const newBuf = subseter.covertToWoff(tmpBuf);
 
-                //     blob = new Blob([newBuf], {
-                //         type: 'font/woff'
-                //     });
-                // }
+                    blob = new Blob([newBuf], {
+                        type: 'font/woff'
+                    });
+                }
+                else {
+                    blob = await res.blob();
+                }
 
+                fontData.type = blob.type;
                 fontData.url = URL.createObjectURL(blob);
+
+                console.log(111, fontData);
 
                 // Clean
                 setTimeout(() => {
