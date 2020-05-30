@@ -26,7 +26,7 @@ const app = new window.Vue({
             currentFont: null,
 
             params: {
-                forceUseFile: getQuery('forceUseFile', false),
+                forceUploadFile: getQuery('forceUploadFile', false),
                 forceTruetype: getQuery('forceTruetype', false),
                 engine: getQuery('engine', 'opentype.js'),
                 fontType: getQuery('type', 'woff'),
@@ -204,7 +204,7 @@ const app = new window.Vue({
             }
 
             // Check file or url
-            if(!this.params.forceUseFile && /^https?:\/\//i.test(data.url)) {
+            if(!this.params.forceUploadFile && /^https?:\/\//i.test(data.url)) {
                 delete data.file;
             }
 
