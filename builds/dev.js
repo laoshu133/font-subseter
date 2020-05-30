@@ -1,7 +1,9 @@
 const opentype = require('opentype.js');
+const bodyParser = require('body-parser');
 const Bundler = require('parcel-bundler');
 const uploader = require('multer')();
 const app = require('express')();
+const axios = require('axios');
 const path = require('path');
 const fs = require('fs');
 
@@ -11,6 +13,40 @@ const port = 1234;
 const bundler = new Bundler('./examples/index.html', {
     publicUrl: '/examples/'
 });
+
+const getFileByReq = async req => {
+    const file = req.file ? req.file.buffer : null;
+    const url = req.body.url || '';
+
+    if(!file && !url) {
+        throw new Error('url or file required');
+    }
+
+    if(file) {
+        return file;
+    }
+
+    return axios.get(url, {
+        responseType: 'arraybuffer'
+    })
+    .then(res => {
+        return res.data;
+    });
+};
+
+const sendError = (res, err, logPrefix = 'Dev error:') => {
+    console.error(logPrefix, err);
+
+    const status = err.status || 500;
+    const body = JSON.stringify({
+        stack: err.stack.split('\n'),
+        message: err.message,
+        status
+    });
+
+    res.status(status);
+    res.send(body);
+};
 
 const fontDir = 'fonts';
 const fontCacheFile = '.fonts.json';
@@ -35,7 +71,7 @@ app.get('/' + fontDir, (req, res) => {
         const names = font.names;
 
         return {
-            url: fontPath,
+            url: `${req.protocol}://${req.hostname}/${fontPath}`,
             names
         };
     });
@@ -52,7 +88,7 @@ app.get(`/${fontDir}/*`, (req, res) => {
     });
 });
 
-app.post('/subset', uploader.single('file'), (req, res) => {
+app.post('/subset', bodyParser.json({ type: 'application/json' }), uploader.single('file'), (req, res) => {
     const forceTruetype = req.body.forceTruetype === 'true';
     const type = req.body.type || 'ttf';
     const text = req.body.text || 'ABCDX';
@@ -65,8 +101,11 @@ app.post('/subset', uploader.single('file'), (req, res) => {
         engine: require('../lib/engines/' + engine)
     });
 
-    subseter.subset(req.file.buffer, text, {
-        forceTruetype
+    return getFileByReq(req)
+    .then(file => {
+        return subseter.subset(file, text, {
+            forceTruetype
+        });
     })
     .then(buf => {
         if(type === 'woff') {
@@ -79,9 +118,24 @@ app.post('/subset', uploader.single('file'), (req, res) => {
         res.send(buf);
     })
     .catch(err => {
-        console.error(err);
+        sendError(res, err, 'Subset error:');
+    });
+});
 
-        res.status(err.status || 500).send(err);
+app.post('/thumbnail', bodyParser.json({ type: 'application/json' }), uploader.single('file'), (req, res) => {
+    const text = req.body.text || '';
+
+    const subseter = new FontSubseter();
+
+    return getFileByReq(req)
+    .then(file => {
+        return subseter.makeThumbnail(file, text);
+    })
+    .then(ret => {
+        res.send(ret);
+    })
+    .catch(err => {
+        sendError(res, err, 'MakeThumbnail error:');
     });
 });
 

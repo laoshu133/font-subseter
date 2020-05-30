@@ -26,10 +26,14 @@ const app = new window.Vue({
             currentFont: null,
 
             params: {
+                forceUseFile: getQuery('forceUseFile', false),
                 forceTruetype: getQuery('forceTruetype', false),
                 engine: getQuery('engine', 'opentype.js'),
                 fontType: getQuery('type', 'woff'),
-                demoText: getQuery('text', '')
+                demoText: getQuery('text', ''),
+
+                apiUrl: getQuery('api', ''),
+                fontUrl: getQuery('url', '')
             },
 
             previewPresets: [
@@ -41,10 +45,31 @@ const app = new window.Vue({
         };
     },
     methods: {
+        pickOrApplyFont(force = false) {
+            const url = this.params.fontUrl;
+            if(!url) {
+                return this.$refs.fileInp.click();
+            }
+
+            let font = this.fontList.find(item => {
+                return item.url === url || item.originUrl === url;
+            });
+
+            if(!font) {
+                font = { url };
+            }
+
+            if(force) {
+                delete this._lastParamsJSON;
+            }
+
+            this.previewFont(font);
+        },
+
         fillFontInfo(font) {
             const names = font.names;
             const getName = (k, lang = 'zh') => {
-                const data = names[k] || { en: '' };
+                const data = names && names[k] || { en: '' };
 
                 return data[lang] || data['en'] || '';
             };
@@ -56,8 +81,9 @@ const app = new window.Vue({
                 subfamily: getName('subfamily'),
                 alias: getName('fontFamily') || family,
                 name: getName('postScriptName') || family,
-                names: font.names,
-                url: font.url
+                loading: false,
+                url: font.url,
+                names
             };
         },
 
@@ -73,8 +99,13 @@ const app = new window.Vue({
         },
 
         checkParamsChange() {
-            const json = JSON.stringify(this.params);
+            const data = Object.assign({}, this.params, {
+                // Ignore keys
+                fontUrl: '',
+                apiUrl: ''
+            });
 
+            const json = JSON.stringify(data);
             if(json !== this._lastParamsJSON) {
                 this._lastParamsJSON = json;
 
@@ -84,11 +115,58 @@ const app = new window.Vue({
             return false;
         },
         async previewFont(font = this.currentFont) {
+            if(!font) {
+                return;
+            }
+
+            // Load font
+            if(!font.file && font.url) {
+                font.loading = true;
+
+                const res = await fetch(font.url);
+
+                font.file = await res.blob();
+            }
+
+            // Fill font info
+            if(!font.names && font.file) {
+                const rawFont = await subseter.loadInfoByBlob(font.file);
+                const fontInfo = this.fillFontInfo({
+                    url: font.url ? font.url : URL.createObjectURL(font.file),
+                    names: rawFont.names
+                });
+
+                Object.assign(font, fontInfo);
+            }
+
+            // Add to fontList is need
+            if(this.fontList.indexOf(font) < 0) {
+                if(!font.names) {
+                    const extInfo = this.fillFontInfo(font);
+
+                    Object.assign(font, extInfo);
+                }
+
+                this.fontList.unshift(font);
+            }
+
+            // Check demoText
             const params = this.params;
             const lastFont = this.currentFont;
+            const nextText = font.alias || font.name || '';
+            const oldText = params.demoText;
 
-            if(!params.demoText || params.demoText === lastFont.alias) {
-                params.demoText = font.alias;
+            // Enabel state
+            this.currentFont = font;
+            font.loading = false;
+
+            if(nextText && (!oldText || oldText === lastFont.alias)) {
+                params.demoText = nextText;
+
+                // Will triger paramse watch
+                if(nextText !== oldText) {
+                    return;
+                }
             }
 
             if(!this.checkParamsChange()) {
@@ -96,15 +174,14 @@ const app = new window.Vue({
             }
 
             this.pending = true;
-            this.currentFont = font;
 
             await Promise.all([
                 this.registerFont(font),
                 new Promise(resolve => {
                     // Delay for UI
                     setTimeout(() => {
-                        resolve(this.subsetFont(font));
-                    }, 500);
+                        resolve(this.subsetFont(font, params));
+                    }, 320);
                 })
                 .then(subsetFont => {
                     font.subset = subsetFont;
@@ -116,58 +193,95 @@ const app = new window.Vue({
             this.pending = false;
         },
 
-        async subsetFont(font = this.currentFont) {
+        async requestApi(path = '/', data = null) {
+            data = Object.assign({}, data || {});
+
+            // Fix url
+            if(data.url) {
+                const linkEl = document.createElement('a');
+
+                data.url = (linkEl.href = data.url) && linkEl.href;
+            }
+
+            // Check file or url
+            if(!this.params.forceUseFile && /^https?:\/\//i.test(data.url)) {
+                delete data.file;
+            }
+
+            let body = JSON.stringify(data);
+            let bodyType = 'application/json';
+
+            // Fit file
+            if(data.file && (data.file instanceof Blob)) {
+                // bodyType = 'multipart/form-data';
+                bodyType = null;
+
+                body = new FormData();
+
+                Object.keys(data).forEach(k => {
+                    body.append(k, data[k]);
+                });
+            }
+
+            const res = await fetch(this.params.apiUrl + path, {
+                headers: bodyType ? { 'Content-Type': bodyType } : {},
+                method: 'post',
+                body
+            });
+
+            if(res.status >= 400) {
+                const data = await res.json();
+                const err = new Error(data.message);
+
+                err.response = data;
+
+                throw err;
+            }
+
+            return res;
+        },
+
+        async subsetFont(font = this.currentFont, params = this.params) {
             const fontData = Object.assign({}, font, {
                 // url: '//localhost/d/xx.woff2',
                 url: null
             });
 
-            if(!fontData.url) {
-                if(!font.file && font.url) {
-                    const res = await fetch(font.url);
+            const data = {
+                url: font.url,
+                file: font.file,
 
-                    font.file = await res.blob();
-                }
+                forceTruetype: params.forceTruetype,
+                text: params.demoText,
+                engine: params.engine,
+                type: 'ttf',
+            };
 
-                const params = this.params;
-                const formData = new FormData();
+            const res = await this.requestApi('/subset', data);
 
-                formData.append('type', 'ttf');
-                formData.append('engine', params.engine);
-                formData.append('forceTruetype', params.forceTruetype);
-                formData.append('text', params.demoText);
-                formData.append('file', font.file);
-
-                const res = await fetch('/subset', {
-                    method: 'post',
-                    body: formData
-                });
-
-                let blob;
-
+            let blob;
+            if(params.fontType !== 'ttf') {
                 // Debug local toWoff
-                if(params.fontType !== 'ttf') {
-                    const tmpBuf = await res.arrayBuffer();
-                    const newBuf = subseter.covertToWoff(tmpBuf);
+                const tmpBuf = await res.arrayBuffer();
+                const newBuf = subseter.covertToWoff(tmpBuf);
 
-                    blob = new Blob([newBuf], {
-                        type: 'font/woff'
-                    });
-                }
-                else {
-                    blob = await res.blob();
-                }
-
-                fontData.type = blob.type;
-                fontData.url = URL.createObjectURL(blob);
-
-                console.log(111, fontData);
-
-                // Clean
-                setTimeout(() => {
-                    URL.revokeObjectURL(fontData.url);
-                }, 60000);
+                blob = new Blob([newBuf], {
+                    type: 'font/woff'
+                });
             }
+            else {
+                blob = await res.blob();
+            }
+
+            fontData.type = blob.type;
+            fontData.url = URL.createObjectURL(blob);
+
+            // Clean
+            setTimeout(() => {
+                URL.revokeObjectURL(fontData.url);
+
+                delete fontData.url;
+            }, 60000);
 
             await this.registerFont(fontData, {
                 useLocal: false,
@@ -237,8 +351,42 @@ const app = new window.Vue({
             clearTimeout(this.updateFontPreviewTimer);
 
             this.updateFontPreviewTimer = setTimeout(() => {
-                this.previewFont(this.currentFont);
+                this.previewFont();
             }, 520);
+        },
+
+        async makeThumbnail() {
+            const font = this.currentFont;
+            if(!font) {
+                return;
+            }
+
+            // Loader
+            this.$set(font, 'thumbnail', {
+                svg: 'Loading...'
+            });
+
+            return this.requestApi('/thumbnail', {
+                url: font.url,
+                file: font.file,
+                text: this.params.demoText
+            })
+            .then(res => {
+                return res.json();
+            })
+            .then(data => {
+                data.image = `data:image/svg+xml,${data.svg.replace(/\n/, '')}`;
+                font.thumbnail = data;
+
+                return data;
+            })
+            .catch(err => {
+                font.thumbnail = {
+                    svg: `Make thumbnail error: ${err.message}`
+                };
+
+                throw err;
+            });
         },
 
         downloadFont() {
@@ -263,16 +411,9 @@ const app = new window.Vue({
         },
 
         async onFileChange(e) {
-            const file = e.target.files[0];
-            const fontInfo = await subseter.loadInfoByBlob(file);
-            const font = this.fillFontInfo({
-                url: URL.createObjectURL(file),
-                names: fontInfo.names,
-                file
+            this.previewFont({
+                file: e.target.files[0]
             });
-
-            this.fontList.unshift(font);
-            this.previewFont(font);
         }
     },
     watch: {
@@ -285,9 +426,12 @@ const app = new window.Vue({
     },
     async created() {
         const fontList = await this.loadFonts();
+        const font = this.params.fontUrl
+            ? { url: this.params.fontUrl }
+            : fontList[0];
 
-        if(fontList[0]) {
-            this.previewFont(fontList[0]);
+        if(font) {
+            this.previewFont(font);
         }
     }
 });

@@ -10,14 +10,21 @@
     <div id="app">
         <div class="demo-text">
             <textarea v-model="params.demoText"></textarea>
+            <div class="thumbnail" v-if="currentFont && currentFont.thumbnail">
+                <img v-if="currentFont.thumbnail.image" :src="currentFont.thumbnail.image" alt="">
+                <template v-if="currentFont.thumbnail.svg" v-html="currentFont.thumbnail.svg"></template>
+            </div>
             <div class="btns">
                 <button @click="downloadFont()">Download subset font</button>
+                <button @click="makeThumbnail()">Make thumbnail</button>
             </div>
         </div>
         <div class="demo-options">
             <div class="file-picker">
+                <label><span>Base API: </span><input v-model="params.apiUrl" placeholder="/"></label>
+                <label><span>Font URL: </span><input v-model="params.fontUrl" placeholder="ttf or otf file URL"></label>
                 <input ref="fileInp" type="file" accept=".ttf,.otf" @change="onFileChange">
-                <button @click="$refs.fileInp.click()">Pick font file(.ttf,  .otf)</button>
+                <button @click="pickOrApplyFont(true)">Pick or apply font(.ttf, .otf)</button>
             </div>
             <div class="options-picker">
                 <label>
@@ -40,6 +47,10 @@
                     Force truetype:
                     <input type="checkbox" v-model="params.forceTruetype">
                 </label>
+                <label>
+                    Force UseFile:
+                    <input type="checkbox" v-model="params.forceUseFile">
+                </label>
             </div>
         </div>
         <div class="font-list">
@@ -51,7 +62,11 @@
                         current: currentFont === item
                     }"
                     @click="previewFont(item)"
-                >{{item.alias}} ({{item.family}})</li>
+                >
+                    {{item.alias}}
+                    <span v-if="item.family">({{item.family}})</span>
+                    <em v-if="item.loading"> - Loading...</em>
+                </li>
             </ul>
         </div>
         <div class="font-preivew" v-if="currentFont">

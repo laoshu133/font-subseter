@@ -15,6 +15,7 @@ body{
 .demo-text{
     background: rgba(255, 255, 255, .8);
     border: 1px solid #DDD;
+    width: 300px;
     position: absolute;
     right: 0;
     top: 0;
@@ -38,15 +39,29 @@ body{
         resize: vertical;
     }
 
+    .thumbnail{
+        border-top: 1px solid #BBB;
+        padding: 10px;
+        word-break: break-all;
+
+        img{
+            display: block;
+            margin: 0 auto;
+            max-width: 100%;
+        }
+    }
+
     .btns{
         border-top: 1px solid #DDD;
-        padding: 10px;
+        padding: 2px 10px;
     }
 
     button{
+        display: block;
         border: 1px solid #CCC;
         cursor: pointer;
         padding: 5px 10px;
+        margin: .8em 0;
 
         &:hover{
             background-color: #EEE;
@@ -60,17 +75,17 @@ body{
     border: 1px solid #DDD;
     border-width: 0 1px 1px 0;
     padding: 10px;
-    height: 120px;
+    height: 188px;
     width: 300px;
     position: absolute;
     z-index: 3;
 
     .file-picker{
-        height: 30px;
+        // height: 30px;
         position: relative;
         overflow: hidden;
 
-        input{
+        input[type=file]{
             position: absolute;
             left: 0;
             top: -199px;
@@ -84,6 +99,33 @@ body{
 
             &:hover{
                 background-color: #EEE;
+            }
+
+            &:focus{
+                background-color: #EEE;
+                border-color: #AAA;
+                outline: 0;
+            }
+        }
+
+        > label{
+            display: flex;
+            padding-bottom: 8px;
+
+            span{
+                line-height: 26px;
+                width: 28%;
+            }
+
+            input{
+                flex: 1;
+                border: 1px solid #CCC;
+                padding: 5px 6px;
+
+                &:focus{
+                    border-color: #999;
+                    outline: 0;
+                }
             }
         }
     }
@@ -107,6 +149,10 @@ body{
                 margin-right: 0;
             }
         }
+
+        input{
+            vertical-align: middle;
+        }
     }
 }
 
@@ -116,7 +162,7 @@ body{
     position: absolute;
     bottom: 0;
     left: 0;
-    top: 120px;
+    top: 188px;
     overflow: hidden;
     overflow-y: auto;
 
