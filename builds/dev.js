@@ -71,7 +71,7 @@ app.get('/' + fontDir, (req, res) => {
         const names = font.names;
 
         return {
-            url: `${req.protocol}://${req.hostname}/${fontPath}`,
+            url: `${req.protocol}://${req.hostname}:${port}/${fontPath}`,
             names
         };
     });

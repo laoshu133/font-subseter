@@ -363,7 +363,7 @@ const app = new window.Vue({
 
             // Loader
             this.$set(font, 'thumbnail', {
-                svg: 'Loading...'
+                message: 'Loading thumbnail...'
             });
 
             return this.requestApi('/thumbnail', {
@@ -382,7 +382,7 @@ const app = new window.Vue({
             })
             .catch(err => {
                 font.thumbnail = {
-                    svg: `Make thumbnail error: ${err.message}`
+                    message: `Make thumbnail error: ${err.message}`
                 };
 
                 throw err;

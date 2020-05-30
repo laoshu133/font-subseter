@@ -12,7 +12,7 @@
             <textarea v-model="params.demoText"></textarea>
             <div class="thumbnail" v-if="currentFont && currentFont.thumbnail">
                 <img v-if="currentFont.thumbnail.image" :src="currentFont.thumbnail.image" alt="">
-                <template v-if="currentFont.thumbnail.svg" v-html="currentFont.thumbnail.svg"></template>
+                <span v-else="currentFont.thumbnail" v-html="currentFont.thumbnail.svg || currentFont.thumbnail.message"></span>
             </div>
             <div class="btns">
                 <button @click="downloadFont()">Download subset font</button>
