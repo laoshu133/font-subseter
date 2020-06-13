@@ -423,6 +423,9 @@ const app = new window.Vue({
             this.previewFont({
                 file: e.target.files[0]
             });
+
+            // Reset file input
+            e.target.value = '';
         }
     },
     watch: {
