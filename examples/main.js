@@ -176,6 +176,9 @@ const app = new window.Vue({
             this.pending = true;
 
             await Promise.all([
+                this.loadInfo(font).then(info => {
+                    console.info('Current font info:', info);
+                }),
                 this.registerFont(font),
                 new Promise(resolve => {
                     // Delay for UI
@@ -289,6 +292,12 @@ const app = new window.Vue({
             });
 
             return fontData;
+        },
+
+        async loadInfo(font = this.currentFont, lang = 'zh') {
+            const info = await subseter.loadInfoByBlob(font.file, lang);
+
+            return info;
         },
 
         async registerFont(data, {

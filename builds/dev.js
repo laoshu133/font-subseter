@@ -15,8 +15,9 @@ const bundler = new Bundler('./examples/index.html', {
 });
 
 const getFileByReq = async req => {
+    const params = Object.assign({}, req.query, req.body);
     const file = req.file ? req.file.buffer : null;
-    const url = req.body.url || '';
+    const url = params.url || '';
 
     if(!file && !url) {
         throw new Error('url or file required');
@@ -88,13 +89,15 @@ app.get(`/${fontDir}/*`, (req, res) => {
     });
 });
 
-app.post('/subset', bodyParser.json({ type: 'application/json' }), uploader.single('file'), (req, res) => {
-    const forceTruetype = req.body.forceTruetype === 'true';
-    const type = req.body.type || 'ttf';
-    const text = req.body.text || 'ABCDX';
+app.use('/subset', bodyParser.json({ type: 'application/json' }), uploader.single('file'), (req, res) => {
+    const params = Object.assign({}, req.query, req.body);
+
+    const forceTruetype = params.forceTruetype === 'true';
+    const type = params.type || 'ttf';
+    const text = params.text || 'ABCDX';
 
     // Clear params
-    let engine = req.body.engine || 'opentype';
+    let engine = params.engine || 'opentype';
     engine = engine.replace(/\.js$/i, '').replace(/[^\w-]/g, '');
 
     const subseter = new FontSubseter({
@@ -122,14 +125,17 @@ app.post('/subset', bodyParser.json({ type: 'application/json' }), uploader.sing
     });
 });
 
-app.post('/thumbnail', bodyParser.json({ type: 'application/json' }), uploader.single('file'), (req, res) => {
-    const text = req.body.text || '';
+app.use('/thumbnail', bodyParser.json({ type: 'application/json' }), uploader.single('file'), (req, res) => {
+    const params = Object.assign({}, req.query, req.body);
+
+    const text = params.text || '';
+    const lang = params.lang || 'zh';
 
     const subseter = new FontSubseter();
 
     return getFileByReq(req)
     .then(file => {
-        return subseter.makeThumbnail(file, text);
+        return subseter.makeThumbnail(file, text, { lang });
     })
     .then(ret => {
         res.send(ret);
